@@ -208,8 +208,8 @@ int main(int argc, char *argv[]) {
     double **distances = compute_distances(points);
 
     /* Find a tour */
-    //long *tour = greedy_tour(points, distances);
-    long *tour = clarke_wright(points, distances);
+    long *tour = greedy_tour(points, distances);
+    //long *tour = clarke_wright(points, distances);
 
     return EXIT_SUCCESS;
 }
