@@ -59,6 +59,7 @@ long* nearest_neighbor(int N, double** points, double** distances) {
         printf("greedy_tour\n");
     long *tour = (long *)malloc(N*sizeof(long));
     long *used = (long *)calloc(N, sizeof(long));
+    long length_tour = 0;
     tour[0] = 0;
     printf("0\n");
     if (print)
@@ -67,17 +68,26 @@ long* nearest_neighbor(int N, double** points, double** distances) {
     long best,i,j;
     for (i=1; i<N; i++) {
        best = -1;
-       for (j=0; j<N; j++) {
-          if (used[j]==0 && (best = -1 || distances[tour[i-1]][j] < distances[tour[i-1]][best]))
+       for (j=1; j<N; j++) {
+          if (print)
+            printf("j = %ld, used[j] = %ld, distances[tour[i-1]][j] = %f, distances[tour[i-1]][best] = %f\n", j, used[j], distances[tour[i-1]][j], distances[tour[i-1]][best]);
+          if (used[j]==0 && (best == -1 || distances[tour[i-1]][j] < distances[tour[i-1]][best])){
+             if (print)
+                printf("Update best = %ld\n", j);
              best = j;
+          }
        }
        tour[i] = best;
+       length_tour += distances[tour[i-1]][tour[i]];
        printf("%ld\n", best);
        if (print)
         printf("Point %ld of the tour: %ld\n", i, best);
        used[best] = 1;
     }
-   return tour;
+    length_tour += distances[tour[N-1]][tour[0]];
+    if (print)
+        printf("Length tour = %ld", length_tour);
+    return tour;
 }
 
 // Clarke Wright tour
