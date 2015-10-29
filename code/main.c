@@ -17,7 +17,7 @@
 #include <stdbool.h>
 #include <math.h>
 
-int print = 1;
+int print = 0;
 
 // Initialize a matrix AxB
 double** init_matrix(long A, long B) {
@@ -53,8 +53,8 @@ double** compute_distances(int N, double **points) {
     return distances;
 }
 
-// Greedy tour
-long* greedy_tour(int N, double** points, double** distances) {
+// Nearest neighbor
+long* nearest_neighbor(int N, double** points, double** distances) {
     if (print)
         printf("greedy_tour\n");
     long *tour = (long *)malloc(N*sizeof(long));
@@ -130,7 +130,7 @@ int main(int argc, char *argv[]) {
     double **distances = compute_distances(N, points);
 
     /* Find a tour */
-    long *tour = greedy_tour(N, points, distances);
+    long *tour = nearest_neighbor(N, points, distances);
     //long *tour = clarke_wright(points, distances);
 
     return EXIT_SUCCESS;
