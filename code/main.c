@@ -99,7 +99,7 @@ long* clarke_wright(int N, double** points, double** distances){
                 printf("count / total = %ld/%ld\n", count,length);
                 printf("distances[i][hub] = %lf\n", distances[i][hub]);
                 printf("distances[j][hub] = %lf\n", distances[j][hub]);
-                printf("distances[i][j] = %lf\n", distances[i][j]);*/
+                printf("distances[i][j] = %lf\n", distances[i][j]);
             }
             saving[count] = distances[i][hub]+distances[j][hub]-distances[i][j];
             if (print)
