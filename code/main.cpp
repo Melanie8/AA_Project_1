@@ -137,9 +137,6 @@ int* greedy(int N, double** points, long int** distances) {
     int *degrees = (int *)calloc(N, sizeof(int));
     long int length_tour = 0;
     int i,j,k,r;
-    /*int k, i, j, r, besti, bestj, prev, current, proceed, connected;
-    long int bestdist;
-    int **used = init_matrix_int(N, N);*/
 
     // Create vector with all the distances
     vector<pair<int, pair<int, int> > > v;
@@ -202,74 +199,6 @@ int* greedy(int N, double** points, long int** distances) {
         current = next;
         tour[k] = next;
     }
-
-    /*for (k=0; k<N; k++) {
-        // Find the best edge
-        besti = 0;
-        bestj = 0;
-        bestdist = 0;
-        for (i=0; i<N; i++) {
-            for (j=i+1; j<N; j++) {
-                // Update the best edge
-                if (used[i][j]==0 && degrees[i]<=1 && degrees[j]<=1 && (bestdist == 0 || distances[i][j] < bestdist)){
-                    // Check if it would create a cycle of length < N
-                    connected = 0;
-                    if (k < N-1){
-                        proceed = 1;
-                        prev = i;
-                        current = i;
-                        while(proceed){
-                            proceed = 0;
-                            for (r=0; r<N && proceed == 0; r++) {
-                                if (r!=prev && r!=current && used[current][r]) {
-                                    if (r==j) {
-                                        connected = 1;
-                                    } else {
-                                        proceed = 1;
-                                        prev = current;
-                                        current = r;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (connected == 0) {
-                        besti = i;
-                        bestj = j;
-                        bestdist = distances[besti][bestj];
-                    }
-                }
-            }
-        }
-        // Add the best edge
-        used[besti][bestj] = 1;
-        used[bestj][besti] = 1;
-        degrees[besti] += 1;
-        degrees[bestj] += 1;
-        length_tour += distances[besti][bestj];
-        if (print)
-            printf("\n \n Best edge : (%d,%d)\n \n", besti, bestj);
-    }
-    if (print)
-        printf("length_tour = %ld\n", length_tour);
-    // Deduce tour
-    tour[0] = 0;
-    printf("0\n");
-    current = tour[0];
-    prev = tour[0];
-    int found_next;
-    for (k=1; k<N; k++){
-        found_next = 0;
-        for (r=0; r<N && found_next == 0; r++) {
-            if (r!=prev && r!=current && used[current][r]) {
-                prev = tour[k-1];
-                tour[k] = r;
-                current = r;
-                printf("%d\n", r);
-                found_next = 1;
-            }
-        }
-    }*/
     if (print_time) {
         clock_t end_greedy = clock();
         long elapsed = timediff(start_greedy, end_greedy);
