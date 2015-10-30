@@ -7,14 +7,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <dirent.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <stdbool.h>
 #include <math.h>
 #include <time.h>
 
@@ -227,23 +219,24 @@ int* clarke_wright(int N, double** points, long int** distances){
     if (print)
         printf("Hub : %d\n", hub);
     long int **saving = init_matrix_long_int(N, N);
-    int i, j;
-    for (i=0; i<N; i++){
-        for (j=i+1; j<N; j++){
+    int i, j, k;
+    for (i=0; i<N; i++) {
+        for (j=i+1; j<N; j++) {
             saving[i][j] = distances[i][hub]+distances[j][hub]-distances[i][j];
-            if (print)
-                printf("Saving %d %d: %ld\n", i, j, saving[count]);
+            if (print) {
+                printf("Saving %d %d: %ld\n", i, j, saving[i][j]);
             }
         }
     }
     //sort(saving, &saving[(N-1)*N*0.5-1], );
     for (k=0; k<N; k++) {
         // Find the best edge
-        besti = 0;
-        bestj = 0;
-        bestdist = 0;
         for (i=0; i<N; i++) {
             for (j=i+1; j<N; j++) {
+
+            }
+        }
+    }
     return tour;
 }
 
