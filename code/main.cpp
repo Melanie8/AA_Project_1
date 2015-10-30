@@ -9,6 +9,10 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include <vector>
+#include <utility>
+#include <algorithm>
+using namespace std;
 
 int print = 0;
 int print_time = 0;
@@ -132,11 +136,80 @@ int* greedy(int N, double** points, long int** distances) {
     int *tour = (int *)malloc(N*sizeof(int));
     int *degrees = (int *)calloc(N, sizeof(int));
     long int length_tour = 0;
-    int k, i, j, r, besti, bestj, prev, current, proceed, connected;
+    int i,j,k,r;
+    /*int k, i, j, r, besti, bestj, prev, current, proceed, connected;
     long int bestdist;
-    int **used = init_matrix_int(N, N);
+    int **used = init_matrix_int(N, N);*/
 
-    for (k=0; k<N; k++) {
+    // Create vector with all the distances
+    vector<pair<int, pair<int, int> > > v;
+    int L = (N*(N-1))/2;
+    v.resize(L);
+    k = 0;
+    for (i=0; i<N; i++) {
+        for (j=i+1; j<N; j++) {
+            v[k].first = distances[i][j];
+            v[k].second.first = i;
+            v[k].second.second = j;
+            k++;
+        }
+    }
+
+    // Sort
+    sort(v.begin(), v.end());
+
+    // Union find
+    int *sets = (int *)calloc(N, sizeof(int));
+    vector <int> neighbor[1000];
+    for (i=0; i<N; i++) {
+        sets[i] = i;
+    }
+    int nedges  = 0;
+    int s;
+    for (k=0; k<L && nedges<N; k++){
+        i = v[k].second.first;
+        j = v[k].second.second;
+        if (degrees[i]<=1 && degrees[j]<=1 && (sets[i]!=sets[j] || nedges==N-1)) {
+            printf("i = %d, j = %d\n", i, j);
+            neighbor[i].push_back(j);
+            neighbor[j].push_back(i);
+            degrees[i]++;
+            degrees[j]++;
+            s = sets[i];
+            if (nedges<N-1){
+                for (r=0; r<L; r++){
+                    if (sets[r] == s)
+                        sets[r] = sets[j];
+                }
+            }
+            nedges++;
+            length_tour += distances[i][j];
+        }
+    }
+    printf("nedges = %d, length_tour = %ld\n", nedges, length_tour);
+    for (i=0; i<N; i++){
+        printf("i = %d, neighbor[i][0] = %d, neighbor[i][1] = %d", i, neighbor[i][0], neighbor[i][1]);
+    }
+
+    // Deduce the tour
+    int current = 0;
+    int prev = 0;
+    int next;
+    tour[0] = 0;
+    printf("0\n");
+    for (k = 1; k<N; k++){
+        printf("0 : %d, 1 : %d\n", neighbor[current][0], neighbor[current][1]);
+        if (neighbor[current][0] == prev)
+            next = neighbor[current][1];
+        else
+            next = neighbor[current][0];
+        printf("%d\n", next);
+        prev = current;
+        current = next;
+        tour[k] = next;
+    }
+
+    /*for (k=0; k<N; k++) {
         // Find the best edge
         besti = 0;
         bestj = 0;
@@ -202,7 +275,7 @@ int* greedy(int N, double** points, long int** distances) {
                 found_next = 1;
             }
         }
-    }
+    }*/
     if (print_time) {
         clock_t end_greedy = clock();
         long elapsed = timediff(start_greedy, end_greedy);
