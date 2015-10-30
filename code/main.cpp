@@ -170,14 +170,13 @@ int* greedy(int N, double** points, long int** distances) {
         i = v[k].second.first;
         j = v[k].second.second;
         if (degrees[i]<=1 && degrees[j]<=1 && (sets[i]!=sets[j] || nedges==N-1)) {
-            printf("i = %d, j = %d\n", i, j);
             neighbor[i].push_back(j);
             neighbor[j].push_back(i);
             degrees[i]++;
             degrees[j]++;
             s = sets[i];
             if (nedges<N-1){
-                for (r=0; r<L; r++){
+                for (r=0; r<N; r++){
                     if (sets[r] == s)
                         sets[r] = sets[j];
                 }
@@ -185,10 +184,6 @@ int* greedy(int N, double** points, long int** distances) {
             nedges++;
             length_tour += distances[i][j];
         }
-    }
-    printf("nedges = %d, length_tour = %ld\n", nedges, length_tour);
-    for (i=0; i<N; i++){
-        printf("i = %d, neighbor[i][0] = %d, neighbor[i][1] = %d", i, neighbor[i][0], neighbor[i][1]);
     }
 
     // Deduce the tour
@@ -198,7 +193,6 @@ int* greedy(int N, double** points, long int** distances) {
     tour[0] = 0;
     printf("0\n");
     for (k = 1; k<N; k++){
-        printf("0 : %d, 1 : %d\n", neighbor[current][0], neighbor[current][1]);
         if (neighbor[current][0] == prev)
             next = neighbor[current][1];
         else
