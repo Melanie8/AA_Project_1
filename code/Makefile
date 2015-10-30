@@ -1,8 +1,8 @@
-CC=gcc
+CC=g++
 CFLAGS=-Werror
 EXEC=travellingsp
-SRC= $(wildcard *.c)
-OBJ= $(SRC:.c=.o)
+SRC= $(wildcard *.cpp)
+OBJ= $(SRC:.cpp=.o)
 
 all: $(EXEC)
 
