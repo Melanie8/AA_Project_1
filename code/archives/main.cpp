@@ -337,6 +337,60 @@ pair<long int, int *> clarke_wright(int N, double** points, long int** distances
     return enhance(N, distances, length_tour, tour);
 }
 
+//Christofides
+pair<long int,int *> christofides(int N, double** points, long int** distances){
+	if(print)
+		printf("christofides\n");
+	clock_t start_greedy = clock();
+	int* tour = (int *)malloc(N*sizeof(int));
+	int *degrees = (int *)calloc(N, sizeof(int));
+	long int length_tour = 0;
+    int i,j,k,r;
+    
+    // Create vector with all the distances
+    vector<pair<int, pair<int, int> > > v;
+    int L = (N*(N-1))/2;
+    v.resize(L);
+    k = 0;
+    for (i=0; i<N; i++) {
+        for (j=i+1; j<N; j++) {
+            v[k].first = distances[i][j];
+            v[k].second.first = i;
+            v[k].second.second = j;
+            k++;
+        }
+    }
+    //sort
+    sort(v.begin(),v.end());
+    // Union find
+    int *sets = (int *)calloc(N, sizeof(int));
+    vector <int> neighbor[1000];
+    for (i=0; i<N; i++) {
+        sets[i] = i;
+    }
+    int nedges  = 0;
+    int s;
+    for (k=0; k<L && nedges<N; k++){
+        i = v[k].second.first;
+        j = v[k].second.second;
+        if (sets[i]!=sets[j] || nedges==N-1) {
+            neighbor[i].push_back(j);
+            neighbor[j].push_back(i);
+            degrees[i]++;
+            degrees[j]++;
+            s = sets[i];
+            if (nedges<N-1){
+                for (r=0; r<N; r++){
+                    if (sets[r] == s)
+                        sets[r] = sets[j];
+                }
+            }
+            nedges++;
+            length_tour += distances[i][j];
+        }
+    }
+
+
 // Optimal tour : brute force
 int* brute_force(int N, double** points, long int** distances){
     if (print)
