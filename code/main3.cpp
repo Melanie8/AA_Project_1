@@ -21,6 +21,7 @@ int print_length = 0;
 vector<pair<int, int> > closeto[1000];
 
 int version = 3;
+int nbEnhancement = 1;
 
 // Initialize a matrix AxB
 double** init_matrix_double(int A, int B) {
@@ -214,125 +215,170 @@ void recompute(int N, int* tour, int* pos, vector<int> *neighbor)
 pair<long int, int *> enhance3(int N, long int** distances, long int length_tour, int* tour){
     clock_t start = clock();
     int cont = 1;
-    int pos[1000];
-    vector<int> neighbor[1000];
     int r, k, l, m, enhancement, temp;
-    
+
     // pos[x] is the position of x in the actual tour
-    for(k = 0; k < N; k++)
-    {
-    	pos[tour[k]] = k;
-    	neighbor[tour[k]].push_back(tour[(k+1)%N]);
-    	neighbor[tour[(k+1)%N]].push_back(tour[k]);
+
+	 int *remembertour = (int *)malloc(N*sizeof(int));
+	 int *besttour = (int *)malloc(N*sizeof(int));
+	 long int rememberlength_tour = length_tour;
+	 long int bestlength_tour = 1000000000;
+
+	 for(int i = 0; i < N; i++) remembertour[i] = tour[i];
+
+	 vector<int> p;
+	 p.resize(N);
+
+	 for(int i = 0; i < N; i++) p[i] = i;
+
+	 for(int z = 0; z < nbEnhancement; z++)
+	 {
+    	random_shuffle(p.begin(), p.end());
+
+    	if(z > 0)
+    	{
+    		for(int i = 0; i < N; i++) tour[i] = remembertour[i];
+    		length_tour = rememberlength_tour;
+    	}
+
+		 int pos[1000];
+		 vector<int> neighbor[1000];
+
+		 for(k = 0; k < N; k++)
+		 {
+		 	pos[tour[k]] = k;
+		 	neighbor[tour[k]].push_back(tour[(k+1)%N]);
+		 	neighbor[tour[(k+1)%N]].push_back(tour[k]);
+		 }
+
+		 cont = 1;
+		 while(cont){
+		     cont = 0;
+		     // We will try to change edge (a,b) with edge (c,d)
+
+		     for(int q = 0; q < N; q++) {
+		     		int a = p[q];
+		     		int pos_a = pos[a];
+		     		int pos_b = (pos_a + 1) % N;
+		     		int b = tour[pos_b];
+		     		// We only consider c such that dist(b,c) < dist(b,a)
+		         for(l = 0; l < closeto[b].size() && closeto[b][l].first < distances[a][b]; l++) {
+		         	int c = closeto[b][l].second;
+		         	int pos_c = pos[c];
+		         	int pos_d = (pos_c + N-1) % N;
+		         	int d = tour[pos_d];
+		         	if(a != c && a != d && b != c && b != d)
+		         	{
+		         		enhancement = distances[a][b] + distances[c][d] - distances[a][d] - distances[b][c];
+
+		         		if(enhancement > 0)
+		         		{
+		         			// Instead of a -> b and d -> c, we put a -> d and b -> c, i.e. we replace the path (b ... d) by the path (d ... b)
+		         			//printf("Switche (%d %d) et (%d %d)\n", a, b, d, c);
+
+		         			int L = pos_d-pos_b+1;
+								if(L < 0) L += N;
+								for(k = 0; k < L/2; k++)
+								{
+									int toreplace1 = (pos_b + k)%N;
+									int toreplace2 = (pos_d + N - k)%N;
+									int remember = tour[toreplace1];
+									tour[toreplace1] = tour[toreplace2];
+									tour[toreplace2] = remember;
+									pos[tour[toreplace1]] = toreplace1;
+									pos[tour[toreplace2]] = toreplace2;
+								}
+
+		         			if(neighbor[a][0] == b) neighbor[a][0] = d;
+		         			else neighbor[a][1] = d;
+		         			if(neighbor[b][0] == a) neighbor[b][0] = c;
+		         			else neighbor[b][1] = c;
+		         			if(neighbor[c][0] == d) neighbor[c][0] = b;
+		         			else neighbor[c][1] = b;
+		         			if(neighbor[d][0] == c) neighbor[d][0] = a;
+		         			else neighbor[d][1] = a;
+		         			length_tour -= enhancement;
+		         			cont = 1;
+		         			break; // We break the loop, because if we continue it then we re-use a -> b, which is not an edge anymore!
+		         		}
+		         		else // 3-opt
+		         		{
+		         			bool mustbreak = false;
+		         			for(m = 0; m < closeto[d].size() && closeto[d][m].first + distances[b][c] < distances[a][b] + distances[c][d]; m++)
+		         			{
+		         				int e = closeto[d][m].second;
+		         				int pos_e = pos[e];
+		         				int pos_f, whichcase;
+		         				if(isbetween(pos_e, pos_b, pos_d))
+		         				{
+		         					pos_f = (pos_e + 1)%N;
+		         				}
+		         				else
+		         				{
+		         					pos_f = (pos_e + N-1)%N;
+		         				}
+		         				int f = tour[pos_f];
+		         				if(f != a && f != b && f != c && f != d && e != a && e != b && e != c && e != d)
+		         				{
+		         					enhancement = distances[a][b]+distances[c][d]+distances[e][f]-distances[b][c]-distances[d][e]-distances[f][a];
+		         					if(enhancement > 0)
+		         					{
+		         						//printf("3-Opt (%d %d) (%d %d) (%d %d)\n", a, b, c, d, e, f);
+		         						if(neighbor[a][0] == b) neighbor[a][0] = f;
+		         						else neighbor[a][1] = f;
+		         						if(neighbor[b][0] == a) neighbor[b][0] = c;
+		         						else neighbor[b][1] = c;
+		         						if(neighbor[c][0] == d) neighbor[c][0] = b;
+		         						else neighbor[c][1] = b;
+		         						if(neighbor[d][0] == c) neighbor[d][0] = e;
+		         						else neighbor[d][1] = e;
+		         						if(neighbor[e][0] == f) neighbor[e][0] = d;
+		         						else neighbor[e][1] = d;
+		         						if(neighbor[f][0] == e) neighbor[f][0] = a;
+		         						else neighbor[f][1] = a;
+		         						recompute(N, tour, pos, neighbor);
+		         						length_tour -= enhancement;
+		         						cont = 1;
+		         						mustbreak = true;
+		         						break;
+		         					}
+		         				}
+		         			}
+		         			if(mustbreak) break;
+		         		}
+
+		         	}
+		         }
+		     }
+
+		 }
+
+		 //printf("Trouve %d\n", length_tour);
+
+		 if(length_tour < bestlength_tour)
+		 {
+		 	bestlength_tour = length_tour;
+		 	for(int i = 0; i < N; i++) besttour[i] = tour[i];
+		 }
+
     }
-    while(cont){
-        cont = 0;
-        // We will try to change edge (a,b) with edge (c,d)
-        for(int a = 0; a < N; a++) {
-        	int pos_a = pos[a];
-        	int pos_b = (pos_a + 1) % N;
-        	int b = tour[pos_b];
-        	// We only consider c such that dist(b,c) < dist(b,a)
-            for(l = 0; l < closeto[b].size() && closeto[b][l].first < distances[a][b]; l++) {
-            	int c = closeto[b][l].second;
-            	int pos_c = pos[c];
-            	int pos_d = (pos_c + N-1) % N;
-            	int d = tour[pos_d];
-            	if(a != c && a != d && b != c && b != d)
-            	{
-            		enhancement = distances[a][b] + distances[c][d] - distances[a][d] - distances[b][c];
-            		if(enhancement > 0)
-            		{
-            			// Instead of a -> b and d -> c, we put a -> d and b -> c, i.e. we replace the path (b ... d) by the path (d ... b)
-            			//printf("Switche (%d %d) et (%d %d)\n", a, b, d, c);
-            			
-            			int L = pos_d-pos_b+1;
-							if(L < 0) L += N;
-							for(k = 0; k < L/2; k++)
-							{
-								int toreplace1 = (pos_b + k)%N;
-								int toreplace2 = (pos_d + N - k)%N;
-								int remember = tour[toreplace1];
-								tour[toreplace1] = tour[toreplace2];
-								tour[toreplace2] = remember;
-								pos[tour[toreplace1]] = toreplace1;
-								pos[tour[toreplace2]] = toreplace2;
-							}
-            			if(neighbor[a][0] == b) neighbor[a][0] = d;
-            			else neighbor[a][1] = d;
-            			if(neighbor[b][0] == a) neighbor[b][0] = c;
-            			else neighbor[b][1] = c;
-            			if(neighbor[c][0] == d) neighbor[c][0] = b;
-            			else neighbor[c][1] = b;
-            			if(neighbor[d][0] == c) neighbor[d][0] = a;
-            			else neighbor[d][1] = a;
-            			length_tour -= enhancement;
-            			cont = 1;
-            			break; // We break the loop, because if we continue it then we re-use a -> b, which is not an edge anymore!
-            		}
-            		else // 3-opt
-            		{
-            			bool mustbreak = false;
-            			for(m = 0; m < closeto[d].size() && closeto[d][m].first + distances[b][c] < distances[a][b] + distances[c][d]; m++)
-            			{
-            				int e = closeto[d][m].second;
-            				int pos_e = pos[e];
-            				int pos_f, whichcase;
-            				if(isbetween(pos_e, pos_b, pos_d))
-            				{
-            					pos_f = (pos_e + 1)%N;
-            				}
-            				else
-            				{
-            					pos_f = (pos_e + N-1)%N;
-            				}
-            				int f = tour[pos_f];
-            				if(f != a && f != b && f != c && f != d && e != a && e != b && e != c && e != d)
-            				{
-            					enhancement = distances[a][b]+distances[c][d]+distances[e][f]-distances[b][c]-distances[d][e]-distances[f][a];
-            					if(enhancement > 0)
-            					{
-            						//printf("3-Opt (%d %d) (%d %d) (%d %d)\n", a, b, c, d, e, f);
-            						if(neighbor[a][0] == b) neighbor[a][0] = f;
-            						else neighbor[a][1] = f;
-            						if(neighbor[b][0] == a) neighbor[b][0] = c;
-            						else neighbor[b][1] = c;
-            						if(neighbor[c][0] == d) neighbor[c][0] = b;
-            						else neighbor[c][1] = b;
-            						if(neighbor[d][0] == c) neighbor[d][0] = e;
-            						else neighbor[d][1] = e;
-            						if(neighbor[e][0] == f) neighbor[e][0] = d;
-            						else neighbor[e][1] = d;
-            						if(neighbor[f][0] == e) neighbor[f][0] = a;
-            						else neighbor[f][1] = a;
-            						recompute(N, tour, pos, neighbor);
-            						length_tour -= enhancement;
-            						cont = 1;
-            						mustbreak = true;
-            						break;
-            					}
-            				}
-            			}
-            			if(mustbreak) break;
-            		}
-            	}
-            }
-        }
-    }
+
+
     if (print) {
         for (k = 0; k < N; k++){
-            printf("%d\n", tour[k]);
+            printf("%d\n", besttour[k]);
         }
     }
     if (print_length)
-        printf("Length tour after enhance 3 = %ld\n", length_tour);
-        
+        printf("Length tour after enhance 3 = %ld\n", bestlength_tour);
+
     if (print_time) {
         clock_t end = clock();
         long elapsed = timediff(start, end);
         printf("Enhance 3 took %ld microseconds\n", elapsed);
     }
-    return make_pair(length_tour, tour);
+
+    return make_pair(bestlength_tour, besttour);
 }
 
 
