@@ -15,9 +15,9 @@
 #include <stdbool.h>
 using namespace std;
 
-int print = 0;
-int print_time = 0;
-int print_length = 0;
+int print = 1;
+int print_time = 1;
+int print_length = 1;
 vector<pair<int, int> > closeto[1000];
 
 int version = 3;
@@ -67,8 +67,8 @@ long int** compute_distances(int N, double **points) {
             d = round(sqrt(square));
             distances[i][j] = d;
             distances[j][i] = d;
-            if (print)
-                printf("Distance from %d to %d: %f\n", i, j, d);
+            /*if (print)
+                printf("Distance from %d to %d: %f\n", i, j, d);*/
         }
     }
     clock_t end = clock();
@@ -339,44 +339,59 @@ pair<long int, int *> enhance3(int N, long int** distances, long int length_tour
 
 
 // Nearest neighbor tour
-pair<long int, int *> nearest_neighbor(int N, double** points, long int** distances) {
-    if (print)
-        printf("greedy_tour\n");
-    clock_t start = clock();
-    int *tour = (int *)malloc(N*sizeof(int));
-    int *used = (int *)calloc(N, sizeof(int));
-    long int length_tour = 0;
-    tour[0] = 0;
-    if (print)
-        printf("0\n");
-    if (print)
-        printf("Point 0 of the tour: 0\n");
-    used[0] = 1;
-    int best,i,j;
-    for (i=1; i<N; i++) {
-       best = -1;
-       for (j=1; j<N; j++) {
-          if (used[j]==0 && (best == -1 || distances[tour[i-1]][j] < distances[tour[i-1]][best])){
-             best = j;
-          }
-       }
-       tour[i] = best;
-       length_tour += distances[tour[i-1]][tour[i]];
-       if (print)
-          printf("%d\n", best);
-       used[best] = 1;
+pair<long int, int *> nearest_neighbor(int N, double** points, long int** distances, int nattempts) {
+    vector <pair<long int, int *> > tours;
+    tours.resize(nattempts);
+    long int best_length = 1000000000;
+    int best_tour = -1;
+    for (int a = 0; a < nattempts; a++){
+        if (print)
+            printf("greedy_tour\n");
+        clock_t start = clock();
+        int *tour = (int *)malloc(N*sizeof(int));
+        int *used = (int *)calloc(N, sizeof(int));
+        long int length_tour = 0;
+        int first = rand() % N;
+        tour[0] = first;
+        if (print)
+            printf("Point 0 of the tour: %d\n", first);
+        used[first] = 1;
+        int best,i,j;
+        for (i=0; i<N; i++) {
+           if (i!=first){
+               best = -1;
+               for (j=0; j<N; j++) {
+                  if (i!=j && used[j]==0 && (best == -1 || distances[tour[i-1]][j] < distances[tour[i-1]][best])){
+                     best = j;
+                  }
+               }
+               tour[i] = best;
+               length_tour += distances[tour[i-1]][tour[i]];
+               if (print)
+                  printf("%d\n", best);
+               used[best] = 1;
+           }
+        }
+        length_tour += distances[tour[N-1]][tour[0]];
+        if (print_length)
+            printf("Length tour for nearest_neighbour = %ld\n", length_tour);
+        if (print_time) {
+            clock_t end = clock();
+            long elapsed = timediff(start, end);
+            printf("Nearest neighbor took %ld microseconds\n", elapsed);
+        }
+        if(version == 3) tours[a] = enhance3(N, distances, length_tour, tour);
+        else if(version == 2) tours[a] = enhance2(N, distances, length_tour, tour);
+        else tours[a] = enhance(N, distances, length_tour, tour);
+        printf("Coucou\n");
+        if (best_tour == -1 || tours[a].first < best_length) {
+            best_tour = a;
+            best_length = tours[a].first;
+        }
+        if (print)
+            printf("Best length = %ld, best_tour = %d\n", best_length, best_tour);
     }
-    length_tour += distances[tour[N-1]][tour[0]];
-    if (print_length)
-        printf("Length tour for nearest_neighbour = %ld\n", length_tour);
-    if (print_time) {
-        clock_t end = clock();
-        long elapsed = timediff(start, end);
-        printf("Nearest neighbor took %ld microseconds\n", elapsed);
-    }
-    if(version == 3) return enhance3(N, distances, length_tour, tour);
-    else if(version == 2) return enhance2(N, distances, length_tour, tour);
-    else return enhance(N, distances, length_tour, tour);
+    return tours[best_tour];
 }
 
 // Greedy tour
@@ -664,7 +679,7 @@ bool valid_edge(int current, int next, vector <int> neighbor[1000]) {
 pair<long int,int *> christofides(int N, double** points, long int** distances){
 	if(print)
 		printf("christofides\n");
-	clock_t start_greedy = clock();
+	clock_t start = clock();
 	int *tour = (int *)malloc(N*sizeof(int));
 	int *degrees = (int *)calloc(N, sizeof(int));
 	long int length_tour = 0;
@@ -789,8 +804,6 @@ pair<long int,int *> christofides(int N, double** points, long int** distances){
         printf("Final tour :\n");
     k = 0;
     int *seen = (int *)calloc(1000, sizeof(int));
-    //bool seen[1000];
-    //memset(seen, false, 1000);
     for (i = 0; i < euler_tour.size(); i++){
         if (seen[euler_tour[i]] == 0){
             tour[k] = euler_tour[i];
@@ -803,41 +816,52 @@ pair<long int,int *> christofides(int N, double** points, long int** distances){
         }
     }
     length_tour += distances[tour[N-1]][tour[0]];
+    if (print_length)
+        printf("Length tour for Christofides = %ld\n", length_tour);
+
+    clock_t end = clock();
+    long elapsed = timediff(start, end);
+    if (print_time)
+        printf("Christophides took %ld microseconds\n", elapsed);
 
     if(version == 3) return enhance3(N, distances, length_tour, tour);
     else if(version == 2) return enhance2(N, distances, length_tour, tour);
     else return enhance(N, distances, length_tour, tour);
-    //return make_pair(1000000000, tour);
 }
 
 int main(int argc, char *argv[]) {
     /* Get arguments */
     int N, i, j, k;
     scanf("%d", &N);
-    // N = 1000;
+    N = 1000;
     double **points = init_matrix_double(N, 2);
     int K = min(20, N-1);
 
-    /*
+
+
     int x = time(NULL) % 1000;
-    x = 390;
+    //x = 390; //Christofides
+    x = 671;
+    x = 123;
+    x = 999;
+    x = 5;
     srand(x);
     printf("Seed = %d\n", x);
     for(i = 0; i < N; i++) {
         points[i][0] = rand() % 1000;
         points[i][1] = rand() % 1000;
     }
-    */
+
     
 	 
     srand(time(NULL));
 
-    for (i=0; i<N; i++) {
+    /*for (i=0; i<N; i++) {
         scanf("%lf", points[i]);
         scanf("%lf", points[i]+1);
         if (print)
             printf("Node %d: (%f, %f)\n", i, points[i][0], points[i][1]);
-    }
+    }*/
 	 
 
     /* Compute distances between all the points */
@@ -870,7 +894,7 @@ int main(int argc, char *argv[]) {
     }
 
     /* Find tours */
-    pair <long int, int*> tour_nn = nearest_neighbor(N, points, distances);
+    pair <long int, int*> tour_nn = nearest_neighbor(N, points, distances, 10);
     
     pair <long int, int*> tour_greedy = greedy(N, points, distances);
 
@@ -901,13 +925,13 @@ int main(int argc, char *argv[]) {
         best_tour = tour_christofides.second;
 
     /* Print the best tour */
-    long int verify_length = 0;
+    /*long int verify_length = 0;
     for (i=0; i<N; i++){
         printf("%d\n", best_tour[i]);
         verify_length += distances[best_tour[i]][best_tour[(i+1)%N]];
     }
     if (print_length)
-        printf("Best length = %ld = %ld\n", best_length, verify_length);
+        printf("Best length = %ld = %ld\n", best_length, verify_length);*/
 
     return EXIT_SUCCESS;
 }
