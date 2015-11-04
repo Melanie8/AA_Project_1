@@ -12,9 +12,10 @@
 #include <vector>
 #include <utility>
 #include <algorithm>
+#include <stdbool.h>
 using namespace std;
 
-int print = 0;
+int print = 1;
 int print_time = 0;
 int print_length = 0;
 vector<pair<int, int> > closeto[1000];
@@ -593,17 +594,79 @@ int* brute_force(int N, double** points, long int** distances){
 
 }
 
+int count_reachable(int v, int *visited, vector <int> neighbor[1000]){
+  // Mark the current node as visited
+  visited[v] = true;
+  int count = 1;
+
+  // Recur for all vertices adjacent to this vertex
+  for (int i = 0; i < neighbor[v].size(); i++){
+      if (neighbor[v][i] != -1 && visited[neighbor[v][i]]==0)
+          count += count_reachable(neighbor[v][i], visited, neighbor);
+  }
+  return count;
+}
+
+
+void remove_edge(vector <int> neighbor[1000], int current, int next){
+    bool not_found = true;
+    for (int i = 0; i < neighbor[current].size() && not_found; i++){
+        if (neighbor[current][i]==next) {
+            neighbor[current][i] = -1;
+            not_found = false;
+        }
+    }
+    not_found = true;
+    for (int i = 0; i < neighbor[next].size() && not_found; i++){
+        if (neighbor[next][i]==current) {
+            neighbor[next][i] = -1;
+            not_found = false;
+        }
+    }
+}
+
+
+// The function to check if edge current-next can be considered as next edge in the Euler tour
+bool valid_edge(int current, int next, vector <int> neighbor[1000]) {
+  // The edge current-next is valid in one of the following two cases:
+  // 1) If next is the only adjacent vertex of current
+  int count = 0;
+  for (int i = 0; i < neighbor[current].size(); i++){
+     if (neighbor[current][i] != -1)
+        count++;
+  }
+  if (count == 1)
+    return true;
+
+  // 2) If there are multiple adjacents, then current-next is not a bridge
+  // count of vertices reachable from current
+  int *visited = (int *)calloc(1000, sizeof(int));
+  int count1 = count_reachable(current, visited, neighbor);
+  // Remove edge (current, next) and after removing the edge, count
+  // vertices reachable from u
+  int *visited2 = (int *)calloc(1000, sizeof(int));
+  int count2 = count_reachable(current, visited2, neighbor);
+  //Add the edge back to the graph
+  neighbor[current].push_back(next);
+  neighbor[next].push_back(current);
+  //If count1 is greater, then edge (current, next) is a bridge
+  if (count1 > count2)
+    return false;
+  else
+    return true;
+}
 
 //Christofides
 pair<long int,int *> christofides(int N, double** points, long int** distances){
 	if(print)
 		printf("christofides\n");
 	clock_t start_greedy = clock();
-	int* tour = (int *)malloc(N*sizeof(int));
+	int *tour = (int *)malloc(N*sizeof(int));
 	int *degrees = (int *)calloc(N, sizeof(int));
 	long int length_tour = 0;
     int i,j,k,r;
-    
+
+    // Find the minimum spanning tree
     // Create vector with all the distances
     vector<pair<int, pair<int, int> > > v;
     int L = (N*(N-1))/2;
@@ -644,8 +707,100 @@ pair<long int,int *> christofides(int N, double** points, long int** distances){
             }
             nedges++;
             length_tour += distances[i][j];
+            if (print)
+                printf("edge taken : (%d, %d)\n", i, j);
         }
     }
+
+    // Find vertices with odd degree
+    vector <int> odd_vertices;
+    for (i=0; i < N; i++){
+        if ((degrees[i] % 2) == 1) {
+            odd_vertices.push_back(i);
+            if (print)
+                printf("odd vertice : %d\n", i);
+        }
+    }
+
+    // Minimal matching
+    vector<pair<int, pair<int, int> > > v_odd;
+    L = (odd_vertices.size()*(odd_vertices.size()-1))/2;
+    if (print){
+        printf("number of odd vertices : %lu\n", odd_vertices.size());
+    }
+    v_odd.resize(L);
+    k = 0;
+    for (i=0; i < odd_vertices.size(); i++){
+        for (j=i+1; j < odd_vertices.size(); j++){
+            v_odd[k].first = distances[odd_vertices[i]][odd_vertices[j]];
+            v_odd[k].second.first = odd_vertices[i];
+            v_odd[k].second.second = odd_vertices[j];
+            if (print)
+                printf("add to v_odd : (%d, %d, %d)\n", v_odd[k].first, v_odd[k].second.first, v_odd[k].second.second);
+            k++;
+        }
+    }
+    sort(v_odd.begin(),v_odd.end());
+    int *odd_used = (int *)calloc(N, sizeof(int));
+    for (i=0; i < L; i++) {
+        if (odd_used[v_odd[i].second.first] == 0 && odd_used[v_odd[i].second.second] == 0) {
+            // We take the edge
+            odd_used[v_odd[i].second.first] = 1;
+            odd_used[v_odd[i].second.second] = 1;
+            neighbor[v_odd[i].second.first].push_back(v_odd[i].second.second);
+            neighbor[v_odd[i].second.second].push_back(v_odd[i].second.first);
+            if (print)
+                printf("matching : (%d, %d)\n", v_odd[i].second.first, v_odd[i].second.second);
+        }
+    }
+
+    // Euler tour
+    if (print)
+        printf("Euler Tour :\n");
+    vector <int> euler_tour;
+    bool cont = true;
+    int current = 0;
+    euler_tour.push_back(0);
+    if (print)
+        printf("%d\n", 0);
+    while(cont){
+        cont = false;
+        for (i = 0; i != neighbor[current].size() && !cont; i++){
+              int next = neighbor[current][i];
+              // If edge current-next is not removed and it is a valid next edge
+              if (next != -1 && valid_edge(current, next, neighbor)){
+                  // remove edge
+                  remove_edge(neighbor, current, next);
+                  // add edge to euler tour
+                  euler_tour.push_back(next);
+                  if (print)
+                    printf("%d\n", next);
+                  cont = true;
+                  current = next;
+              }
+          }
+    }
+
+    // Create the final tour
+    if (print)
+        printf("Final tour :\n");
+    k = 0;
+    bool seen[1000];
+    memset(seen, false, 1000);
+    for (i = 0; i < euler_tour.size(); i++){
+        if (seen[euler_tour[i]] == false){
+            tour[k] = euler_tour[i];
+            if (print)
+                printf("%d\n", tour[k]);
+            k++;
+            seen[euler_tour[i]] = true;
+        }
+    }
+
+    if(version == 3) return enhance3(N, distances, length_tour, tour);
+    else if(version == 2) return enhance2(N, distances, length_tour, tour);
+    else return enhance(N, distances, length_tour, tour);
+}
 
 int main(int argc, char *argv[]) {
     /* Get arguments */
@@ -654,7 +809,7 @@ int main(int argc, char *argv[]) {
     // N = 1000;
     double **points = init_matrix_double(N, 2);
     int K = min(20, N-1);
-    
+
     /*
     int x = time(NULL) % 1000;
     x = 390;
@@ -721,18 +876,21 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    pair <long int, int*> tour_christofides = christofides(N, points, distances);
+
     //int* tour_brute = brute_force(N, points, distances);
 
     /* Find the best one */
-    //long int best_length = min(tour_nn.first, tour_greedy.first);
-    long int best_length = min(tour_nn.first, min(tour_greedy.first, tour_cw.first));
+    long int best_length = min(tour_nn.first, min(tour_greedy.first, min(tour_cw.first, tour_christofides.first)));
     int *best_tour;
     if (best_length == tour_nn.first)
         best_tour = tour_nn.second;
     else if (best_length == tour_greedy.first)
         best_tour = tour_greedy.second;
-    else
+    else if (best_length == tour_cw.first)
         best_tour = tour_cw.second;
+    else
+        best_tour = tour_christofides.second;
 
     /* Print the best tour */
     long int verify_length = 0;
