@@ -584,26 +584,6 @@ pair<long int, int *> clarke_wright(int N, double** points, long int** distances
     else return enhance(N, distances, length_tour, tour);
 }
 
-// Optimal tour : brute force
-int* brute_force(int N, double** points, long int** distances){
-    if (print)
-        printf("clarke-write\n");
-    clock_t start_greedy = clock();
-
-    int* tour = (int *)malloc(N*sizeof(int));
-
-    //??
-
-    if (print_time) {
-        clock_t end_greedy = clock();
-        long elapsed = timediff(start_greedy, end_greedy);
-        if (print_time)
-            printf("Clarke-Wright took %ld microseconds\n", elapsed);
-    }
-    return tour;
-
-}
-
 int count_reachable(int v, int *visited, vector <int> neighbor[1000]){
   // Mark the current node as visited
   visited[v] = 1;
@@ -904,8 +884,6 @@ int main(int argc, char *argv[]) {
     }
 
     pair <long int, int*> tour_christofides = christofides(N, points, distances);
-
-    //int* tour_brute = brute_force(N, points, distances);
 
     /* Find the best one */
     long int best_length = min(tour_nn.first, min(tour_greedy.first, min(tour_cw.first, tour_christofides.first)));
