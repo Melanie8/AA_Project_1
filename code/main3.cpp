@@ -225,25 +225,27 @@ pair<long int, int *> enhance3(int N, long int** distances, long int length_tour
     	neighbor[tour[k]].push_back(tour[(k+1)%N]);
     	neighbor[tour[(k+1)%N]].push_back(tour[k]);
     }
-    
     while(cont){
         cont = 0;
         // We will try to change edge (a,b) with edge (c,d)
         for(int a = 0; a < N; a++) {
-        		int pos_a = pos[a];
-        		int pos_b = (pos_a + 1) % N;
-        		int b = tour[pos_b];
-        		// We only consider c such that dist(b,c) < dist(b,a)
+        	int pos_a = pos[a];
+        	int pos_b = (pos_a + 1) % N;
+        	int b = tour[pos_b];
+        	// We only consider c such that dist(b,c) < dist(b,a)
             for(l = 0; l < closeto[b].size() && closeto[b][l].first < distances[a][b]; l++) {
+                printf("a = %d, l = %d\n", a ,l);
             	int c = closeto[b][l].second;
             	int pos_c = pos[c];
             	int pos_d = (pos_c + N-1) % N;
             	int d = tour[pos_d];
             	if(a != c && a != d && b != c && b != d)
             	{
+            	    printf("Coucou\n");
             		enhancement = distances[a][b] + distances[c][d] - distances[a][d] - distances[b][c];
             		if(enhancement > 0)
             		{
+            		    printf("Coucou if 0\n");
             			// Instead of a -> b and d -> c, we put a -> d and b -> c, i.e. we replace the path (b ... d) by the path (d ... b)
             			//printf("Switche (%d %d) et (%d %d)\n", a, b, d, c);
             			
@@ -259,21 +261,28 @@ pair<long int, int *> enhance3(int N, long int** distances, long int length_tour
 								pos[tour[toreplace1]] = toreplace1;
 								pos[tour[toreplace2]] = toreplace2;
 							}
-            			
+            			printf("Coucou if 1\n");
+            			printf("b = %d, d = %d\n", b, d);
+            			printf("neighbor[a][0] = %d\n", neighbor[a][0]);
             			if(neighbor[a][0] == b) neighbor[a][0] = d;
             			else neighbor[a][1] = d;
+            			printf("Coucou if 2\n");
             			if(neighbor[b][0] == a) neighbor[b][0] = c;
             			else neighbor[b][1] = c;
+            			printf("Coucou if 3\n");
             			if(neighbor[c][0] == d) neighbor[c][0] = b;
             			else neighbor[c][1] = b;
+            			printf("Coucou if 4\n");
             			if(neighbor[d][0] == c) neighbor[d][0] = a;
             			else neighbor[d][1] = a;
+            			printf("Coucou if 5\n");
             			length_tour -= enhancement;
             			cont = 1;
             			break; // We break the loop, because if we continue it then we re-use a -> b, which is not an edge anymore!
             		}
             		else // 3-opt
             		{
+            		    printf("Coucou else\n");
             			bool mustbreak = false;
             			for(m = 0; m < closeto[d].size() && closeto[d][m].first + distances[b][c] < distances[a][b] + distances[c][d]; m++)
             			{
@@ -321,6 +330,7 @@ pair<long int, int *> enhance3(int N, long int** distances, long int length_tour
             }
         }
     }
+    printf("Coucou enhance3\n");
     if (print) {
         for (k = 0; k < N; k++){
             printf("%d\n", tour[k]);
@@ -334,6 +344,7 @@ pair<long int, int *> enhance3(int N, long int** distances, long int length_tour
         long elapsed = timediff(start, end);
         printf("Enhance 3 took %ld microseconds\n", elapsed);
     }
+    printf("Coucou enhance3\n");
     return make_pair(length_tour, tour);
 }
 
