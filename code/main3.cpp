@@ -15,7 +15,7 @@
 #include <stdbool.h>
 using namespace std;
 
-int print = 1;
+int print = 0;
 int print_time = 0;
 int print_length = 0;
 vector<pair<int, int> > closeto[1000];
@@ -596,7 +596,7 @@ int* brute_force(int N, double** points, long int** distances){
 
 int count_reachable(int v, int *visited, vector <int> neighbor[1000]){
   // Mark the current node as visited
-  visited[v] = true;
+  visited[v] = 1;
   int count = 1;
 
   // Recur for all vertices adjacent to this vertex
@@ -641,9 +641,13 @@ bool valid_edge(int current, int next, vector <int> neighbor[1000]) {
   // 2) If there are multiple adjacents, then current-next is not a bridge
   // count of vertices reachable from current
   int *visited = (int *)calloc(1000, sizeof(int));
+  //int visited[1000];
+  //memset(visited, false, 1000);
   int count1 = count_reachable(current, visited, neighbor);
   // Remove edge (current, next) and after removing the edge, count
   // vertices reachable from u
+  remove_edge(neighbor, current, next);
+  //memset(visited, false, 1000);
   int *visited2 = (int *)calloc(1000, sizeof(int));
   int count2 = count_reachable(current, visited2, neighbor);
   //Add the edge back to the graph
@@ -706,7 +710,6 @@ pair<long int,int *> christofides(int N, double** points, long int** distances){
                 }
             }
             nedges++;
-            length_tour += distances[i][j];
             if (print)
                 printf("edge taken : (%d, %d)\n", i, j);
         }
@@ -725,10 +728,10 @@ pair<long int,int *> christofides(int N, double** points, long int** distances){
     // Minimal matching
     vector<pair<int, pair<int, int> > > v_odd;
     L = (odd_vertices.size()*(odd_vertices.size()-1))/2;
+    v_odd.resize(L);
     if (print){
         printf("number of odd vertices : %lu\n", odd_vertices.size());
     }
-    v_odd.resize(L);
     k = 0;
     for (i=0; i < odd_vertices.size(); i++){
         for (j=i+1; j < odd_vertices.size(); j++){
@@ -785,21 +788,26 @@ pair<long int,int *> christofides(int N, double** points, long int** distances){
     if (print)
         printf("Final tour :\n");
     k = 0;
-    bool seen[1000];
-    memset(seen, false, 1000);
+    int *seen = (int *)calloc(1000, sizeof(int));
+    //bool seen[1000];
+    //memset(seen, false, 1000);
     for (i = 0; i < euler_tour.size(); i++){
-        if (seen[euler_tour[i]] == false){
+        if (seen[euler_tour[i]] == 0){
             tour[k] = euler_tour[i];
             if (print)
                 printf("%d\n", tour[k]);
+            seen[euler_tour[i]] = 1;
+            if (k > 0)
+                length_tour += distances[tour[k-1]][tour[k]];
             k++;
-            seen[euler_tour[i]] = true;
         }
     }
+    length_tour += distances[tour[N-1]][tour[0]];
 
     if(version == 3) return enhance3(N, distances, length_tour, tour);
     else if(version == 2) return enhance2(N, distances, length_tour, tour);
     else return enhance(N, distances, length_tour, tour);
+    //return make_pair(1000000000, tour);
 }
 
 int main(int argc, char *argv[]) {
