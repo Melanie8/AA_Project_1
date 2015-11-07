@@ -79,6 +79,28 @@ long int** compute_distances(int N, double **points) {
     return distances;
 }
 
+int *neighbors_to_tour(int N, vector <int> neighbor[1000]){
+    int *tour = (int *)malloc(N*sizeof(int));
+    int current = 0;
+    int prev = 0;
+    int next;
+    tour[0] = 0;
+    if (print)
+        printf("0\n");
+    for (int k = 1; k<N; k++){
+        if (neighbor[current][0] == prev)
+            next = neighbor[current][1];
+        else
+            next = neighbor[current][0];
+        if (print)
+            printf("%d\n", next);
+        prev = current;
+        current = next;
+        tour[k] = next;
+    }
+    return tour;
+}
+
 // Enhance existent tour
 pair<long int, int *> enhance(int N, long int** distances, long int length_tour, int* tour){
 	 clock_t start = clock();
@@ -381,6 +403,135 @@ pair<long int, int *> enhance3(int N, long int** distances, long int length_tour
     return make_pair(bestlength_tour, besttour);
 }
 
+// Lin-Kernighan
+/*pair <long int, vector <pair <int, int> > > lin_kernighan_sub(int N, long int** distances, long int length_tour, vector <pair <int, int> > neighbors){
+    clock_t start = clock();
+
+    int alternatives_tried[1000];
+    int x_taken[1000][1000];
+    int y_taken[1000][1000];
+    long int new_length_tour = 0;
+
+    // choose t1
+    int first = 0;
+    while(first < N){
+        int i = 1;
+        vector <int> t;
+        t.push_back(-1); // to make it really start at index 1
+        t.push_back(tour[first]);
+        // choose x1 = (t1, t2) in T
+        int second;
+        if (alternatives_tried[first] == 0) {
+            second = (first+1) % N;
+            t.push_back(tour[second]);
+        } else {
+            second = (first-1) % N;
+            t.push_back(tour[second]);
+        }
+        x_taken[t[1]][t[2]] = 1;
+        x_taken[t[2]][t[1]] = 1;
+        new_length_tour -= distances[t[1]][t[2]];
+
+        // choose y1 = (t2, t3) not in T
+        int G1 = 0;
+        for (int t3=0; t3<N && G1 <=0; t3++){
+            if (t3 != tour[(second+1) % N] && t3 != tour[(second-1) % N] && x_taken[t[2]][t3]==0 && y_taken[t[2]][t3]==0){
+                G1 = distances[t[1]][t[2]]-distances[t[2]][t3];
+            }
+        }
+        if (G1 > 0){
+            t.push_back(t3);
+            y_taken[t[2]][t[3]] = 1;
+            y_taken[t[3]][t[2]] = 1;
+            new_length_tour += distances[t[2][t[3]];
+            int G = 1;
+            while(G > 0){
+                i++;
+                // choose x_i = (t_{2i-1}, t_{2i}) in T
+                t3 = t[2*i-1];
+                bool cont = true;
+                for (int n = 0; n < 2 && cont; n++){
+                    t4 = neighbors[t3][n];
+                    // if x_i ≠ y_s for all s < i and if t_{2i} is joined to t_1, the resulting configuration is a tour ??????????????
+                    // !!!! allow unfeasible choice for i = 2
+                    if (y_taken[t[2*i-1]][t[2*i]]==0 && ){
+                        if (different){
+                            cont = false;
+                            t.push_back(t4);
+                            taken[t[3]][t[4]] = 1;
+                            taken[t[4]][t[3]] = 1;
+                            new_length_tour += distances[t[3][t[4]];
+                            // If T' is a better tour than T, let T = T' and redo the heuristic
+                            if (new_length_tour < length_tour){
+                                // remove the edges x
+                                for (int j = 1; j < i; j++){
+                                    if (neighbors[t[2*j-1]][0] == t[2*j])
+                                        neighbors[t[2*j-1]][0] = -1;
+                                    else
+                                        neighbors[t[2*j-1]][1] = -1;
+                                    if (neighbors[t[2*j]][0] == t[2*j-1])
+                                        neighbors[t[2*j]][0] = -1;
+                                    else
+                                        neighbors[t[2*j]][1] = -1;
+                                }
+                                // add the edges y
+                                for (int j = 1; j < i; j++){
+                                    if (neighbors[t[2*j]][0] == -1
+                                        neighbors[t[2*j]][0] = t[2*j+1];
+                                    else
+                                        neighbors[t[2*j]][1] = t[2*j+1];
+                                    if (neighbors[t[2*j+1]][0] == -1
+                                        neighbors[t[2*j+1]][0] = t[2*j];
+                                    else
+                                        neighbors[t[2*j+1]][1] = t[2*j];
+                                }
+                                return lin_kernighan_sub(N, distances, new_length_tour, neighbors);
+                            }
+                            // choose y_i = (t_{2i), t_{2i+1}) not in T
+                            int G;
+                            for (int t5 = 0; t5 < N; t5++){
+                                if (x_taken[t4][t5] == 0 && y_taken[t4][t5] == 0) {
+                                    G = 0;
+                                    for (int j = 0; j < i; j++){
+                                        G += distances[t[2*i-1]][t[2*i]] - distances[t[2*i]][t[2*i+1]];
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
+        // choose untried alternative for t1
+        if (alternatives_tried[first] == 0)
+            alternatives_tried[first] = 1;
+        else
+            first++;
+    }
+
+    if (print_length)
+        printf("Length tour after Lin-Kernighan = %ld\n", length_tour);
+
+    if (print_time) {
+        clock_t end = clock();
+        long elapsed = timediff(start, end);
+        printf("Lin-Kernighan took %ld microseconds\n", elapsed);
+    }
+    return make_pair(length_tour, new_neighbors);
+}
+
+pair<long int, int *> lin_kernighan(int N, long int** distances, long int length_tour, int* tour){
+    vector <pair <int, int> > neighbors;
+    neighbors.resize(N);
+    for (i=0; i<N; i++){
+        neighbors[i][0] = tour[(i-1) % N];
+        neighbors[i][1] = tour[(i+1) % N];
+    }
+    pair <long int, vector <pair <int, int> > new_neighbors = lin_kernighan_sub(N, distances, length_tour, neighbors);
+
+    return make_pair(new_neighbors[0], neighbors_to_tour(N, new_neighbors[1]));
+}*/
 
 // Nearest neighbor tour
 pair<long int, int *> nearest_neighbor(int N, double** points, long int** distances, int nattempts) {
@@ -440,7 +591,6 @@ pair<long int, int *> greedy(int N, double** points, long int** distances) {
     if (print)
         printf("greedy_tour\n");
     clock_t start_greedy = clock();
-    int *tour = (int *)malloc(N*sizeof(int));
     int *degrees = (int *)calloc(N, sizeof(int));
     long int length_tour = 0;
     int i,j,k,r;
@@ -490,23 +640,8 @@ pair<long int, int *> greedy(int N, double** points, long int** distances) {
         }
     }
     // Deduce the tour
-    int current = 0;
-    int prev = 0;
-    int next;
-    tour[0] = 0;
-    if (print)
-        printf("0\n");
-    for (k = 1; k<N; k++){
-        if (neighbor[current][0] == prev)
-            next = neighbor[current][1];
-        else
-            next = neighbor[current][0];
-        if (print)
-            printf("%d\n", next);
-        prev = current;
-        current = next;
-        tour[k] = next;
-    }
+    int *tour =neighbors_to_tour(N, neighbor);
+
     if (print_length)
         printf("Length tour for greedy = %ld\n", length_tour);
     if (print_time) {
@@ -643,7 +778,6 @@ int count_reachable(int v, int *visited, vector <int> neighbor[1000]){
   return count;
 }
 
-
 void remove_edge(vector <int> neighbor[1000], int current, int next){
     bool not_found = true;
     for (int i = 0; i < neighbor[current].size() && not_found; i++){
@@ -660,7 +794,6 @@ void remove_edge(vector <int> neighbor[1000], int current, int next){
         }
     }
 }
-
 
 // The function to check if edge current-next can be considered as next edge in the Euler tour
 bool valid_edge(int current, int next, vector <int> neighbor[1000]) {

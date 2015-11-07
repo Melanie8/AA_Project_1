@@ -1,0 +1,5 @@
+check distances
+for each problem it should be clearly marked which of the members have contributed
+do random tours and check which algo is the best
+do graphs
+discuss time
