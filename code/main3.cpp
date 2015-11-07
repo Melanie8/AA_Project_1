@@ -108,7 +108,7 @@ pair<long int, int *> enhance(int N, long int** distances, long int length_tour,
     int r, k, s, enhancement, temp;
     while(cont){
         cont = 0;
-        for (r=1; r < (N+1)/2; r++) {
+        for (r = 1; r < (N+1)/2; r++) {
             for (k = 0; k < N; k++) {
                 enhancement = distances[tour[k]][tour[(k+1)%N]] + distances[tour[(k+1+r)%N]][tour[(k+2+r)%N]] - distances[tour[k]][tour[(k+1+r)%N]] - distances[tour[(k+1)%N]][tour[(k+2+r)%N]];
                 if (enhancement > 0) {
@@ -157,10 +157,10 @@ pair<long int, int *> enhance2(int N, long int** distances, long int length_tour
         cont = 0;
         // We will try to change edge (a,b) with edge (c,d)
         for(int a = 0; a < N; a++) {
-        		int pos_a = pos[a];
-        		int pos_b = (pos_a + 1) % N;
-        		int b = tour[pos_b];
-        		// We only consider c such that dist(b,c) < dist(b,a)
+        	int pos_a = pos[a];
+        	int pos_b = (pos_a + 1) % N;
+        	int b = tour[pos_b];
+            // We only consider c such that dist(b,c) < dist(b,a)
             for(l = 0; l < closeto[b].size() && closeto[b][l].first < distances[a][b]; l++) {
             	int c = closeto[b][l].second;
             	int pos_c = pos[c];
@@ -1023,14 +1023,11 @@ int main(int argc, char *argv[]) {
     
     clock_t start = clock();
     
-    for(i = 0; i < N; i++)
-    {
+    for(i = 0; i < N; i++){
     	closeto[i].resize(N-1);
     	k = 0;
-    	for(j = 0; j < N; j++)
-    	{
-    		if(i != j)
-    		{
+    	for(j = 0; j < N; j++){
+    		if(i != j){
     			closeto[i][k] = make_pair(distances[i][j], j);
     			k++;
     		}
