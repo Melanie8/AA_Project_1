@@ -21,8 +21,8 @@ long int **distances;
 
 int print = 0;
 int print_time = 0;
-int print_length = 0;
-int do_test = 0;
+int print_length = 1;
+int do_test = 1;
 vector<pair<int, int> > closeto[1000];
 
 int version = 3;
@@ -1036,7 +1036,7 @@ int main(int argc, char *argv[]) {
 
         pair <long int, int*> tour_greedy = greedy();
 
-        /*long int test_length = 1000000000;
+        long int test_length = 1000000000;
         pair <long int, int*> tour_cw;
         for(i = 0; i < 1; i++){
             pair <long int, int*> tour_cw_test = clarke_wright();
@@ -1044,15 +1044,15 @@ int main(int argc, char *argv[]) {
                 tour_cw = tour_cw_test;
                 test_length = tour_cw_test.first;
             }
-        }*/
+        }
 
         pair <long int, int*> tour_christofides = christofides();
 
         /* Find the best one */
         if (do_test)
             printf("%ld %ld %ld\n", tour_nn.first, tour_greedy.first, tour_christofides.first);
-        //long int best_length = min(tour_nn.first, min(tour_greedy.first, min(tour_cw.first, tour_christofides.first)));
-        long int best_length = min(tour_nn.first, min(tour_greedy.first, tour_christofides.first));
+        long int best_length = min(tour_nn.first, min(tour_greedy.first, min(tour_cw.first, tour_christofides.first)));
+        //long int best_length = min(tour_nn.first, min(tour_greedy.first, tour_christofides.first));
         int *best_tour;
         if (best_length == tour_nn.first){
             if (do_test)
@@ -1064,18 +1064,27 @@ int main(int argc, char *argv[]) {
                 printf("Greedy\n");
             best_tour = tour_greedy.second;
             count2++;
-        } /*else if (best_length == tour_cw.first) {
+        } else if (best_length == tour_cw.first) {
             if (do_test)
                 printf("Clarke Wright\n");
             best_tour = tour_cw.second;
             count3++;
-        }*/
+        }
         else {
             if (do_test)
                 printf("Christofides\n");
             best_tour = tour_christofides.second;
             count4++;
         }
+
+        /*long int length_cw = 0;
+        printf("Tour Clark-Wright\n");
+        printf("%ld\n", tour_cw.first);
+        for (i=0; i<N; i++){
+            printf("%d\n", tour_cw.second[i]);
+            length_cw += distances[best_tour[i]][best_tour[(i+1)%N]];
+        }
+        printf("%ld\n", length_cw);*/
 
         if (!do_test){
             /* Print the best tour */
