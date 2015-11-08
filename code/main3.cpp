@@ -16,12 +16,12 @@
 using namespace std;
 
 int print = 0;
-int print_time = 0;
+int print_time = 1;
 int print_length = 0;
 vector<pair<int, int> > closeto[1000];
 
-int version = 0;
-int nbEnhancement = 25;
+int version = 3;
+int nbEnhancement = 20;
 
 // Initialize a matrix AxB
 double** init_matrix_double(int A, int B) {
@@ -978,6 +978,11 @@ int main(int argc, char *argv[]) {
     int count1=0,count2=0,count3=0,count4=0;
 for(r=0;r<2;r++){
 
+<<<<<<< Updated upstream
+=======
+
+
+>>>>>>> Stashed changes
     int x = time(NULL) % 1000;
     srand(x);
     printf("Seed = %d\n", x);
@@ -985,18 +990,30 @@ for(r=0;r<2;r++){
         points[i][0] = rand() % 1000;
         points[i][1] = rand() % 1000;
     }
+<<<<<<< Updated upstream
 
 
 
     /* srand(time(NULL));
 
+=======
+
+    
+	 
+    /*srand(time(NULL));
+>>>>>>> Stashed changes
     for (i=0; i<N; i++) {
         scanf("%lf", points[i]);
         scanf("%lf", points[i]+1);
         if (print)
             printf("Node %d: (%f, %f)\n", i, points[i][0], points[i][1]);
+<<<<<<< Updated upstream
     }
 	*/
+=======
+    }*/
+	 
+>>>>>>> Stashed changes
 
     /* Compute distances between all the points */
     long **distances = compute_distances(N, points);
@@ -1021,7 +1038,7 @@ for(r=0;r<2;r++){
     if (print_time) {
         clock_t end = clock();
         long elapsed = timediff(start, end);
-        printf("Initialization of enhance 2 took %ld microseconds\n", elapsed);
+        printf("Initialization of enhance took %ld microseconds\n", elapsed);
     }
 
     /* Find tours */
@@ -1029,7 +1046,7 @@ for(r=0;r<2;r++){
 
     pair <long int, int*> tour_greedy = greedy(N, points, distances);
 
-    /*long int test_length = 1000000000;
+    long int test_length = 1000000000;
     pair <long int, int*> tour_cw;
     for(i = 0; i < 1; i++){
         pair <long int, int*> tour_cw_test = clarke_wright(N, points, distances);
@@ -1037,13 +1054,13 @@ for(r=0;r<2;r++){
             tour_cw = tour_cw_test;
             test_length = tour_cw_test.first;
         }
-    }*/
+    }
 
     pair <long int, int*> tour_christofides = christofides(N, points, distances);
 
     /* Find the best one */
-    //long int best_length = min(tour_nn.first, min(tour_greedy.first, min(tour_cw.first, tour_christofides.first)));
-    long int best_length = min(tour_nn.first, min(tour_greedy.first, tour_christofides.first));
+    long int best_length = min(tour_nn.first, min(tour_greedy.first, min(tour_cw.first, tour_christofides.first)));
+    //long int best_length = min(tour_nn.first, min(tour_greedy.first, tour_christofides.first));
     int *best_tour;
     if (best_length == tour_nn.first){
         best_tour = tour_nn.second;
@@ -1051,12 +1068,18 @@ for(r=0;r<2;r++){
         }
     else if (best_length == tour_greedy.first){
         best_tour = tour_greedy.second;
+<<<<<<< Updated upstream
     	count2++;
         }
     //else if (best_length == tour_cw.first){
       //  best_tour = tour_cw.second;
       //  count3++;}
     else{
+=======
+    else if (best_length == tour_cw.first)
+        best_tour = tour_cw.second;
+    else
+>>>>>>> Stashed changes
         best_tour = tour_christofides.second;
     	count4++;
         }
