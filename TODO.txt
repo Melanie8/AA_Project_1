@@ -1,6 +1,1 @@
-did several times nn and enhance (could afford since fast code)
 randomize greedy?
-graph of the strategy
-do random tours and check which algo is the best
-discuss time
-for each problem it should be clearly marked which of the members have contributed
